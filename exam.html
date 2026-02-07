@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>ExamPro Official v6</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        :root { --p: #2563eb; --d: #0f172a; --c: #1e293b; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--d); color: #f8fafc; }
+        header { background: #020617; padding: 15px; display: flex; justify-content: space-between; border-bottom: 2px solid var(--p); position: sticky; top: 0; z-index: 100; }
+        .container { max-width: 1000px; margin: auto; padding: 10px; }
+        .card { background: var(--c); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; }
+        .hidden { display: none; }
+        
+        /* Quiz Styles */
+        .quiz-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        @media (max-width: 768px) { .quiz-grid { grid-template-columns: 1fr; } }
+        
+        .option { background: #334155; padding: 12px; border-radius: 8px; margin: 10px 0; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+        .option:hover { background: #475569; }
+        .selected { border-color: var(--p); background: #1e40af; }
+        .correct { background: #15803d !important; border-color: #22c55e; }
+        .wrong { background: #b91c1c !important; border-color: #ef4444; }
+        
+        /* Palette */
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .p-btn { padding: 10px 0; border: none; border-radius: 5px; background: #475569; color: white; cursor: pointer; font-weight: bold; }
+        .p-btn.active { outline: 3px solid white; }
+        .p-btn.ans { background: #22c55e; }
+        .p-btn.mark { background: #a855f7; }
+        
+        button { cursor: pointer; background: var(--p); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        .secondary { background: #64748b; }
+        .sol-box { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 5px solid #22c55e; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<header id="mainHeader" class="hidden">
+    <div id="examName">Exam Name</div>
+    <div id="timerDisplay">00:00</div>
+</header>
+
+<div class="container">
+    <div id="homeScreen" class="card" style="text-align: center;">
+        <h1>🚀 Entrance Exam Mock</h1>
+        <p>Real-time Practice for MHT-CET & KEAM PYQs</p>
+        <button onclick="showSetup()">Start Test</button>
+    </div>
+
+    <div id="setupScreen" class="card hidden" style="text-align: center;">
+        <h2>Select Your Exam</h2>
+        <button onclick="initTest('CET')">MHT-CET (PCM)</button>
+        <button onclick="initTest('KEAM')">KEAM (Paper I/II)</button>
+    </div>
+
+    <div id="quizScreen" class="hidden">
+        <div class="quiz-grid">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; color: #94a3b8;">
+                    <span id="subLabel">Subject</span>
+                    <span id="numLabel">Q 1/1</span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #334155; margin: 15px 0;">
+                <h3 id="questionText">Loading...</h3>
+                <div id="optionsList"></div>
+                <div id="solutionBox" class="hidden"></div>
+                
+                <div style="margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="secondary" onclick="movePrev()">Prev</button>
+                    <button id="markBtn" onclick="toggleMark()" style="background: #a855f7;">Review</button>
+                    <button onclick="moveNext()">Next</button>
+                    <button id="submitBtn" onclick="confirmFinish()" style="background: #ef4444; margin-left: auto;">Submit</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h4>Question Palette</h4>
+                <div class="palette" id="paletteGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="card hidden" style="text-align: center;">
+        <h2>Test Result</h2>
+        <div id="scoreDisplay" style="font-size: 24px; margin: 20px 0;"></div>
+        <button onclick="enterReview()">Review Solutions</button>
+        <button class="secondary" onclick="location.reload()">Back to Home</button>
+    </div>
+</div>
+
+<script>
+// ================= QUESTION BANK =================
+const DATA = {
+    CET: {
+        Physics: [{q: "If the temperature of a gas is increased from 27°C to 927°C, the RMS velocity becomes:", o: ["Double", "Half", "Triple", "4 times"], a: 0, e: "RMS velocity $v \\propto \\sqrt{T}$. $T_1 = 300K, T_2 = 1200K$. Since $T$ is 4x, $v$ is $\\sqrt{4} = 2$x."}],
+        Math: [{q: "The derivative of $e^{\\sin x}$ w.r.t $x$ is:", o: ["$e^{\\sin x}$", "$\\cos x \\cdot e^{\\sin x}$", "$\\sin x \\cdot e^{\\cos x}$", "$e^{\\cos x}$"], a: 1, e: "Using Chain Rule: $d/dx(e^{u}) = e^u \\cdot du/dx$."}]
+    },
+    KEAM: {
+        Chemistry: [{q: "Which element has the highest electronegativity?", o: ["Oxygen", "Fluorine", "Nitrogen", "Chlorine"], a: 1, e: "Fluorine is the most electronegative element in the periodic table."}]
+    }
+};
+
+// ================= APP LOGIC =================
+let qList = [], answers = [], marked = [], currentIndex = 0;
+let timerSeconds = 0, timerId = null, examType = "", isReviewMode = false;
+
+function showSetup() {
+    document.getElementById('homeScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+}
+
+function initTest(type) {
+    examType = type;
+    qList = [];
+    const subjects = DATA[type];
+    Object.keys(subjects).forEach(sub => {
+        subjects[sub].forEach(q => qList.push({...q, sub: sub}));
+    });
+
+    // Shuffle
+    qList.sort(() => Math.random() - 0.5);
+
+    answers = Array(qList.length).fill(null);
+    marked = Array(qList.length).fill(false);
+    timerSeconds = type === 'CET' ? 180 * 60 : 150 * 60;
+
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('mainHeader').classList.remove('hidden');
+    document.getElementById('quizScreen').classList.remove('hidden');
+    document.getElementById('examName').innerText = type + " Practice";
+
+    renderPalette();
+    loadQuestion(0);
+    startTimer();
+}
+
+function loadQuestion(idx) {
+    currentIndex = idx;
+    const q = qList[idx];
+    document.getElementById('subLabel').innerText = q.sub;
+    document.getElementById('numLabel').innerText = `Q ${idx + 1}/${qList.length}`;
+    document.getElementById('questionText').innerHTML = q.q;
+
+    const list = document.getElementById('optionsList');
+    list.innerHTML = "";
+    q.o.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = `option ${answers[currentIndex] === i ? 'selected' : ''}`;
+        
+        if (isReviewMode) {
+            if (i === q.a) div.classList.add('correct');
+            else if (answers[currentIndex] === i) div.classList.add('wrong');
+        }
+
+        div.innerHTML = opt;
+        if (!isReviewMode) div.onclick = () => { answers[currentIndex] = i; loadQuestion(currentIndex); };
+        list.appendChild(div);
+    });
+
+    const sBox = document.getElementById('solutionBox');
+    if (isReviewMode) {
+        sBox.classList.remove('hidden');
+        sBox.innerHTML = `<div class="sol-box"><b>Solution:</b> ${q.e || "Standard concept applies."}</div>`;
+    } else {
+        sBox.classList.add('hidden');
+    }
+
+    if (window.MathJax) MathJax.typesetPromise();
+    updatePaletteUI();
+}
+
+function renderPalette() {
+    const grid = document.getElementById('paletteGrid');
+    grid.innerHTML = "";
+    qList.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = "p-btn";
+        btn.innerText = i + 1;
+        btn.onclick = () => loadQuestion(i);
+        grid.appendChild(btn);
+    });
+}
+
+function updatePaletteUI() {
+    const btns = document.querySelectorAll('.p-btn');
+    btns.forEach((btn, i) => {
+        btn.classList.remove('active', 'ans', 'mark');
+        if (i === currentIndex) btn.classList.add('active');
+        if (answers[i] !== null) btn.classList.add('ans');
+        if (marked[i]) btn.classList.add('mark');
+    });
+}
+
+function moveNext() { if (currentIndex < qList.length - 1) loadQuestion(currentIndex + 1); }
+function movePrev() { if (currentIndex > 0) loadQuestion(currentIndex - 1); }
+function toggleMark() { marked[currentIndex] = !marked[currentIndex]; updatePaletteUI(); }
+
+function startTimer() {
+    timerId = setInterval(() => {
+        timerSeconds--;
+        let m = Math.floor(timerSeconds / 60);
+        let s = timerSeconds % 60;
+        document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        if (timerSeconds <= 0) confirmFinish();
+    }, 1000);
+}
+
+function confirmFinish() {
+    if (confirm("Submit test?")) {
+        clearInterval(timerId);
+        document.getElementById('quizScreen').classList.add('hidden');
+        document.getElementById('mainHeader').classList.add('hidden');
+        document.getElementById('resultScreen').classList.remove('hidden');
+
+        let score = 0;
+        qList.forEach((q, i) => {
+            if (answers[i] === q.a) {
+                if (examType === 'CET' && q.sub === 'Math') score += 2;
+                else if (examType === 'KEAM') score += 4;
+                else score += 1;
+            } else if (answers[i] !== null && examType === 'KEAM') {
+                score -= 1;
+            }
+        });
+        document.getElementById('scoreDisplay').innerText = `Final Score: ${score}`;
+    }
+}
+
+function enterReview() {
+    isReviewMode = true;
+    document.getElementById('resultScreen').classList.add('hidden');
+    document.getElementById('quizScreen').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+    document.getElementById('markBtn').classList.add('hidden');
+    loadQuestion(0);
+}
+</script>
+
+</body>
+</html>
