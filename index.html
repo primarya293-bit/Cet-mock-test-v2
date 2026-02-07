@@ -2,322 +2,237 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ExamPro Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExamPro Perfect</title>
+
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
 <style>
 :root{
-  --p:#06b6d4;
-  --bg:#083344;
-  --card:#164e63;
+  --bg:#06b6d4;
+  --card:#ecfeff;
+  --btn:#0284c7;
+  --dark:#083344;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui,-apple-system,sans-serif;
+  font-family:system-ui;
   background:var(--bg);
-  color:#ecfeff;
+  color:var(--dark);
 }
 header{
-  background:#042f2e;
+  background:#022c22;
+  color:white;
   padding:12px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  border-bottom:2px solid var(--p);
-  position:sticky;top:0;z-index:100;
+  font-weight:bold;
 }
 .container{padding:12px}
 .card{
   background:var(--card);
   padding:16px;
-  border-radius:12px;
-  margin-bottom:16px;
+  border-radius:14px;
+  margin-bottom:14px;
 }
-.q-text{font-size:1.1rem;margin-bottom:18px}
-.option{
-  background:#155e75;
+button{
+  width:100%;
   padding:14px;
+  border:none;
   border-radius:10px;
-  margin:10px 0;
+  background:var(--btn);
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  margin-top:8px;
+}
+.option{
+  background:white;
+  padding:12px;
+  border-radius:10px;
+  margin:8px 0;
   border:2px solid transparent;
 }
-.option.selected{border-color:white}
-.option.correct{background:#166534!important}
-.option.wrong{background:#991b1b!important}
+.option.selected{border-color:#0ea5e9}
+.option.correct{background:#bbf7d0}
+.option.wrong{background:#fecaca}
+.hidden{display:none}
 .palette{
   display:grid;
   grid-template-columns:repeat(6,1fr);
-  gap:6px;margin-top:12px
+  gap:6px;
 }
-.p-btn{
+.pbtn{
   aspect-ratio:1;
   border:none;
   border-radius:6px;
-  background:#0e7490;
-  color:white;
-  font-size:12px;
+  background:#67e8f9;
   font-weight:bold;
 }
-.p-btn.active{outline:2px solid white}
-.p-btn.ans{background:#22c55e}
-.p-btn.mark{background:#a855f7}
-button.main-btn{
-  width:100%;
-  background:var(--p);
-  color:black;
-  border:none;
-  padding:15px;
-  border-radius:10px;
-  font-weight:bold;
-  font-size:16px;
-  margin:6px 0;
-}
-.btn-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;margin-top:12px
-}
-.hidden{display:none}
-.sol-box{
-  background:#042f2e;
-  padding:12px;
-  border-radius:8px;
-  border-left:4px solid #22c55e;
-  margin-top:10px;
-}
+.pbtn.done{background:#22c55e;color:white}
+.pbtn.active{outline:2px solid black}
 </style>
 </head>
 
 <body>
 
-<header id="h-bar" class="hidden">
-  <div id="exam-label"></div>
-  <div id="time-label" style="font-family:monospace">00:00</div>
+<header id="top" class="hidden">
+<span id="modeTag"></span>
+<span id="timer">00:00</span>
 </header>
 
 <div class="container">
 
-<div id="home-ui" class="card" style="text-align:center">
-  <h2>🚀 ExamPro v8</h2>
-  <p>Cyan Edition</p>
-  <button class="main-btn" onclick="openSetup()">START PRACTICE</button>
+<div id="home" class="card">
+<h2>🚀 ExamPro Perfect</h2>
+<button onclick="openSetup()">Start</button>
 </div>
 
-<div id="setup-ui" class="card hidden" style="text-align:center">
-  <h3>Select Exam</h3>
-  <button class="main-btn" onclick="startExam('CET')">MHT-CET (90Q)</button>
-  <button class="main-btn" onclick="startExam('KEAM')">KEAM (120Q)</button>
-  <button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Back</button>
+<div id="setup" class="card hidden">
+<h3>Choose Mode</h3>
+<button onclick="start('PRACTICE')">Practice Mode</button>
+<button onclick="start('EXAM')">Exam Mode</button>
+<button style="background:#64748b" onclick="location.reload()">Back</button>
 </div>
 
-<div id="quiz-ui" class="hidden">
-
+<div id="quiz" class="hidden">
 <div class="card">
-  <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:8px">
-    <span id="sub-tag"></span>
-    <span id="q-count"></span>
-  </div>
+<div id="qCount"></div>
+<div id="qText"></div>
+<div id="opts"></div>
 
-  <div id="q-display" class="q-text"></div>
-  <div id="opt-list"></div>
-  <div id="sol-display" class="hidden"></div>
-
-  <div class="btn-row">
-    <button class="main-btn" style="background:#0e7490;color:white" onclick="prevQ()">Prev</button>
-    <button class="main-btn" onclick="nextQ()">Next</button>
-  </div>
-
-  <button class="main-btn" style="background:#a855f7" onclick="markQ()">Mark for Review</button>
-  <button class="main-btn" style="background:#ef4444" onclick="finish()">Submit</button>
+<button onclick="prev()">Prev</button>
+<button onclick="next()">Next</button>
+<button style="background:#ef4444" onclick="finish()">Submit</button>
 </div>
 
 <div class="card">
-  <h4>Question Palette</h4>
-  <div id="p-grid" class="palette"></div>
+<h4>Questions</h4>
+<div id="palette" class="palette"></div>
+</div>
 </div>
 
-</div>
-
-<div id="res-ui" class="card hidden" style="text-align:center">
-  <h2>Score</h2>
-  <div id="final-score" style="font-size:2rem;margin:20px 0"></div>
-  <button class="main-btn" onclick="review()">Review</button>
-  <button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Home</button>
+<div id="result" class="card hidden">
+<h2>Result</h2>
+<div id="scoreBox"></div>
+<div id="progressBox"></div>
+<button onclick="location.reload()">Home</button>
 </div>
 
 </div>
 
 <script>
-// ===== ELEMENTS =====
-const homeUI = document.getElementById("home-ui");
-const setupUI = document.getElementById("setup-ui");
-const quizUI  = document.getElementById("quiz-ui");
-const resUI   = document.getElementById("res-ui");
-const hBar    = document.getElementById("h-bar");
-
-const examLabel = document.getElementById("exam-label");
-const timeLabel = document.getElementById("time-label");
-const subTag = document.getElementById("sub-tag");
-const qCount = document.getElementById("q-count");
-const qDisplay = document.getElementById("q-display");
-const optList = document.getElementById("opt-list");
-const solDisplay = document.getElementById("sol-display");
-const pGrid = document.getElementById("p-grid");
-const finalScore = document.getElementById("final-score");
-
-// ===== QUESTIONS =====
+// ================= QUESTIONS =================
 const QUESTIONS={
 CET:{
-Physics:[
-{q:"SI unit of force?",o:["J","N","W","Pa"],a:1,e:"Force is measured in Newton."},
-{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0,e:"Speed of light in vacuum."}
-],
-Chemistry:[
-{q:"pH of pure water?",o:["5","6","7","8"],a:2,e:"Neutral pH is 7."}
-],
 Math:[
-{q:"$\\sin 30^\\circ$ value?",o:["0","1","1/2","√3/2"],a:2,e:"Standard trig value."}
+{q:"If $2x=10$, find $x$",o:["3","5","10","2"],a:1},
+{q:"Derivative of $x^2$",o:["x","2x","x^3","1"],a:1}
+],
+Physics:[
+{q:"SI unit of force?",o:["Watt","Newton","Joule","Pascal"],a:1}
 ]
 },
 KEAM:{
-Physics:[
-{q:"Unit of power?",o:["J","W","N","Pa"],a:1,e:"Power unit is watt."}
-],
 Chemistry:[
-{q:"Atomic number of oxygen?",o:["6","7","8","16"],a:2,e:"Oxygen = 8."}
-],
-Math:[
-{q:"cos 0°?",o:["0","1","-1","∞"],a:1,e:"cos 0 = 1"}
+{q:"Atomic number of Oxygen?",o:["6","7","8","16"],a:2}
 ]
 }
 };
+// ============================================
 
-// ===== LOGIC =====
-function autoGen(arr,n){
-  let out=[];
-  while(out.length<n){
-    let c=[...arr];
-    c.sort(()=>Math.random()-0.5);
-    out.push(...c);
-  }
-  return out.slice(0,n);
+let list=[],ans=[],idx=0,mode="",time=0,timerInt=null;
+
+// BUILD UNIQUE LIST (NO REPEAT EVER)
+function buildList(){
+list=[];
+Object.values(QUESTIONS).forEach(exam=>{
+Object.values(exam).forEach(sub=>{
+sub.forEach(q=>list.push(q));
+});
+});
+list=[...new Set(list)];
+list.sort(()=>Math.random()-0.5);
+ans=Array(list.length).fill(null);
 }
-
-let list=[],answers=[],marked=[],index=0,timer=0,exam="",interval=null,isReview=false;
 
 function openSetup(){
-  homeUI.classList.add("hidden");
-  setupUI.classList.remove("hidden");
+home.classList.add("hidden");
+setup.classList.remove("hidden");
 }
 
-function startExam(type){
-  exam=type; list=[];
-  let d=QUESTIONS[type];
+function start(m){
+mode=m;
+buildList();
+setup.classList.add("hidden");
+quiz.classList.remove("hidden");
+top.classList.remove("hidden");
+modeTag.innerText=m+" MODE";
+time=m==="EXAM"?list.length*60:0;
 
-  if(type==="CET"){
-    list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),30));
-    list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),30));
-    list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),30));
-    timer=180*60;
-  }else{
-    list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),40));
-    list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),40));
-    list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),40));
-    timer=150*60;
-  }
+if(m==="EXAM"){
+timerInt=setInterval(()=>{
+time--;
+timer.innerText=Math.floor(time/60)+":"+String(time%60).padStart(2,"0");
+if(time<=0)finish();
+},1000);
+}else timer.innerText="∞";
 
-  answers=Array(list.length).fill(null);
-  marked=Array(list.length).fill(false);
-
-  setupUI.classList.add("hidden");
-  quizUI.classList.remove("hidden");
-  hBar.classList.remove("hidden");
-  examLabel.innerText=type+" MOCK";
-
-  buildPalette();
-  showQ(0);
-
-  interval=setInterval(()=>{
-    timer--;
-    let m=Math.floor(timer/60),s=timer%60;
-    timeLabel.innerText=`${m}:${s<10?"0":""}${s}`;
-    if(timer<=0)finish();
-  },1000);
+buildPalette();
+show(0);
 }
 
-function showQ(i){
-  index=i;
-  let q=list[i];
-  subTag.innerText=q.sub;
-  qCount.innerText=`Q ${i+1}/${list.length}`;
-  qDisplay.innerHTML=q.q;
-  optList.innerHTML="";
-  q.o.forEach((t,idx)=>{
-    let d=document.createElement("div");
-    d.className="option"+(answers[i]===idx?" selected":"");
-    if(isReview){
-      if(idx===q.a)d.classList.add("correct");
-      else if(answers[i]===idx)d.classList.add("wrong");
-    }
-    d.innerHTML=t;
-    if(!isReview)d.onclick=()=>{answers[i]=idx;showQ(i)};
-    optList.appendChild(d);
-  });
-  if(isReview){
-    solDisplay.classList.remove("hidden");
-    solDisplay.innerHTML=`<div class="sol-box">${q.e}</div>`;
-  }
-  if(window.MathJax) MathJax.typeset();
-  updatePalette();
+function show(i){
+idx=i;
+qCount.innerText=`Q ${i+1}/${list.length}`;
+qText.innerHTML=list[i].q;
+opts.innerHTML="";
+list[i].o.forEach((t,j)=>{
+let d=document.createElement("div");
+d.className="option"+(ans[i]===j?" selected":"");
+d.innerHTML=t;
+d.onclick=()=>{ans[i]=j;show(i)};
+opts.appendChild(d);
+});
+updatePalette();
+if(window.MathJax)MathJax.typeset();
 }
 
 function buildPalette(){
-  pGrid.innerHTML="";
-  list.forEach((_,i)=>{
-    let b=document.createElement("button");
-    b.className="p-btn";
-    b.innerText=i+1;
-    b.onclick=()=>showQ(i);
-    pGrid.appendChild(b);
-  });
+palette.innerHTML="";
+list.forEach((_,i)=>{
+let b=document.createElement("button");
+b.className="pbtn";
+b.innerText=i+1;
+b.onclick=()=>show(i);
+palette.appendChild(b);
+});
 }
 
 function updatePalette(){
-  document.querySelectorAll(".p-btn").forEach((b,i)=>{
-    b.classList.remove("active","ans","mark");
-    if(i===index)b.classList.add("active");
-    if(answers[i]!=null)b.classList.add("ans");
-    if(marked[i])b.classList.add("mark");
-  });
+document.querySelectorAll(".pbtn").forEach((b,i)=>{
+b.classList.toggle("active",i===idx);
+b.classList.toggle("done",ans[i]!==null);
+});
 }
 
-function nextQ(){ if(index<list.length-1)showQ(index+1); }
-function prevQ(){ if(index>0)showQ(index-1); }
-function markQ(){ marked[index]=!marked[index]; updatePalette(); }
+function next(){if(idx<list.length-1)show(idx+1)}
+function prev(){if(idx>0)show(idx-1)}
 
 function finish(){
-  clearInterval(interval);
-  quizUI.classList.add("hidden");
-  hBar.classList.add("hidden");
-  resUI.classList.remove("hidden");
-  let score=0;
-  list.forEach((q,i)=>{
-    if(answers[i]===q.a){
-      score+=(exam==="KEAM"?4:(q.sub==="Math"?2:1));
-    }else if(answers[i]!=null && exam==="KEAM")score--;
-  });
-  finalScore.innerText=score;
-}
+clearInterval(timerInt);
+quiz.classList.add("hidden");
+top.classList.add("hidden");
+result.classList.remove("hidden");
 
-function review(){
-  isReview=true;
-  resUI.classList.add("hidden");
-  quizUI.classList.remove("hidden");
-  showQ(0);
+let correct=0;
+list.forEach((q,i)=>{if(ans[i]===q.a)correct++});
+
+let score=mode==="EXAM"?correct*2:correct;
+scoreBox.innerHTML=`Score: <b>${score}</b><br>Correct: ${correct}/${list.length}`;
+progressBox.innerHTML=`Accuracy: ${(correct/list.length*100).toFixed(1)}%`;
 }
 </script>
-
 </body>
 </html>
