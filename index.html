@@ -3,28 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ExamPro Mobile</title>const homeUI = document.getElementById("home-ui");
-const setupUI = document.getElementById("setup-ui");
-const quizUI  = document.getElementById("quiz-ui");
-const resUI   = document.getElementById("res-ui");
-const hBar    = document.getElementById("h-bar");
-
-const examLabel = document.getElementById("exam-label");
-const timeLabel = document.getElementById("time-label");
-const subTag = document.getElementById("sub-tag");
-const qCount = document.getElementById("q-count");
-const qDisplay = document.getElementById("q-display");
-const optList = document.getElementById("opt-list");
-const solDisplay = document.getElementById("sol-display");
-const pGrid = document.getElementById("p-grid");
-const finalScore = document.getElementById("final-score");
+<title>ExamPro Mobile</title>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
 <style>
 :root{
-  --p:#06b6d4;          /* cyan */
-  --bg:#083344;         /* dark cyan bg */
-  --card:#164e63;       /* card cyan */
+  --p:#06b6d4;
+  --bg:#083344;
+  --card:#164e63;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
@@ -107,83 +93,97 @@ button.main-btn{
 <body>
 
 <header id="h-bar" class="hidden">
-<div id="exam-label"></div>
-<div id="time-label" style="font-family:monospace">00:00</div>
+  <div id="exam-label"></div>
+  <div id="time-label" style="font-family:monospace">00:00</div>
 </header>
 
 <div class="container">
 
 <div id="home-ui" class="card" style="text-align:center">
-<h2>🚀 ExamPro v8</h2>
-<p>Cyan Edition • Redmi Optimized</p>
-<button class="main-btn" onclick="openSetup()">START PRACTICE</button>
+  <h2>🚀 ExamPro v8</h2>
+  <p>Cyan Edition</p>
+  <button class="main-btn" onclick="openSetup()">START PRACTICE</button>
 </div>
 
 <div id="setup-ui" class="card hidden" style="text-align:center">
-<h3>Select Exam</h3>
-<button class="main-btn" onclick="start('CET')">MHT-CET (90Q)</button>
-<button class="main-btn" onclick="start('KEAM')">KEAM (120Q)</button>
-<button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Back</button>
+  <h3>Select Exam</h3>
+  <button class="main-btn" onclick="startExam('CET')">MHT-CET (90Q)</button>
+  <button class="main-btn" onclick="startExam('KEAM')">KEAM (120Q)</button>
+  <button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Back</button>
 </div>
 
 <div id="quiz-ui" class="hidden">
 
 <div class="card">
-<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:8px">
-<span id="sub-tag"></span>
-<span id="q-count"></span>
-</div>
+  <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:8px">
+    <span id="sub-tag"></span>
+    <span id="q-count"></span>
+  </div>
 
-<div id="q-display" class="q-text"></div>
-<div id="opt-list"></div>
-<div id="sol-display" class="hidden"></div>
+  <div id="q-display" class="q-text"></div>
+  <div id="opt-list"></div>
+  <div id="sol-display" class="hidden"></div>
 
-<div class="btn-row">
-<button class="main-btn" style="background:#0e7490;color:white" onclick="prev()">Prev</button>
-<button class="main-btn" onclick="next()">Next</button>
-</div>
+  <div class="btn-row">
+    <button class="main-btn" style="background:#0e7490;color:white" onclick="prevQ()">Prev</button>
+    <button class="main-btn" onclick="nextQ()">Next</button>
+  </div>
 
-<button class="main-btn" style="background:#a855f7" onclick="mark()">Mark for Review</button>
-<button class="main-btn" style="background:#ef4444" onclick="finish()">Submit</button>
+  <button class="main-btn" style="background:#a855f7" onclick="markQ()">Mark for Review</button>
+  <button class="main-btn" style="background:#ef4444" onclick="finish()">Submit</button>
 </div>
 
 <div class="card">
-<h4>Question Palette</h4>
-<div id="p-grid" class="palette"></div>
+  <h4>Question Palette</h4>
+  <div id="p-grid" class="palette"></div>
 </div>
 
 </div>
 
 <div id="res-ui" class="card hidden" style="text-align:center">
-<h2>Score</h2>
-<div id="final-score" style="font-size:2rem;margin:20px 0"></div>
-<button class="main-btn" onclick="review()">Review</button>
-<button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Home</button>
+  <h2>Score</h2>
+  <div id="final-score" style="font-size:2rem;margin:20px 0"></div>
+  <button class="main-btn" onclick="review()">Review</button>
+  <button class="main-btn" style="background:#155e75;color:white" onclick="location.reload()">Home</button>
 </div>
 
 </div>
 
 <script>
-// ================= QUESTION BANK =================
+// ===== ELEMENTS =====
+const homeUI = document.getElementById("home-ui");
+const setupUI = document.getElementById("setup-ui");
+const quizUI  = document.getElementById("quiz-ui");
+const resUI   = document.getElementById("res-ui");
+const hBar    = document.getElementById("h-bar");
+
+const examLabel = document.getElementById("exam-label");
+const timeLabel = document.getElementById("time-label");
+const subTag = document.getElementById("sub-tag");
+const qCount = document.getElementById("q-count");
+const qDisplay = document.getElementById("q-display");
+const optList = document.getElementById("opt-list");
+const solDisplay = document.getElementById("sol-display");
+const pGrid = document.getElementById("p-grid");
+const finalScore = document.getElementById("final-score");
+
+// ===== QUESTIONS =====
 const QUESTIONS={
 CET:{
 Physics:[
 {q:"SI unit of force?",o:["J","N","W","Pa"],a:1,e:"Force is measured in Newton."},
-{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0,e:"Speed of light in vacuum."},
-{q:"Ohm’s law?",o:["V=IR","P=VI","F=ma","E=mc²"],a:0,e:"V proportional to I."}
+{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0,e:"Speed of light in vacuum."}
 ],
 Chemistry:[
-{q:"pH of pure water?",o:["5","6","7","8"],a:2,e:"Neutral pH is 7."},
-{q:"Common salt formula?",o:["NaCl","KCl","Na₂CO₃","CaCO₃"],a:0,e:"Sodium chloride."}
+{q:"pH of pure water?",o:["5","6","7","8"],a:2,e:"Neutral pH is 7."}
 ],
 Math:[
-{q:"$\\sin 30^\\circ$ value?",o:["0","1","1/2","√3/2"],a:2,e:"Standard trig value."},
-{q:"Derivative of $x^2$?",o:["2x","x","x²","1"],a:0,e:"Power rule."}
+{q:"$\\sin 30^\\circ$ value?",o:["0","1","1/2","√3/2"],a:2,e:"Standard trig value."}
 ]
 },
 KEAM:{
 Physics:[
-{q:"Unit of power?",o:["J","W","N","Pa"],a:1,e:"Power is watt."}
+{q:"Unit of power?",o:["J","W","N","Pa"],a:1,e:"Power unit is watt."}
 ],
 Chemistry:[
 {q:"Atomic number of oxygen?",o:["6","7","8","16"],a:2,e:"Oxygen = 8."}
@@ -194,132 +194,130 @@ Math:[
 }
 };
 
-// ================= AUTO GENERATION =================
+// ===== LOGIC =====
 function autoGen(arr,n){
-let out=[];
-while(out.length<n){
-let c=[...arr];
-c.sort(()=>Math.random()-0.5);
-out.push(...c);
-}
-return out.slice(0,n);
+  let out=[];
+  while(out.length<n){
+    let c=[...arr];
+    c.sort(()=>Math.random()-0.5);
+    out.push(...c);
+  }
+  return out.slice(0,n);
 }
 
-// ================= STATE =================
 let list=[],answers=[],marked=[],index=0,timer=0,exam="",interval=null,isReview=false;
 
-// ================= FLOW =================
 function openSetup(){
-home-ui.classList.add('hidden');
-setup-ui.classList.remove('hidden');
+  homeUI.classList.add("hidden");
+  setupUI.classList.remove("hidden");
 }
 
-function start(type){
-exam=type;list=[];
-let d=QUESTIONS[type];
+function startExam(type){
+  exam=type; list=[];
+  let d=QUESTIONS[type];
 
-if(type==="CET"){
-list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),30));
-list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),30));
-list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),30));
-timer=180*60;
-}else{
-list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),40));
-list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),40));
-list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),40));
-timer=150*60;
+  if(type==="CET"){
+    list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),30));
+    list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),30));
+    list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),30));
+    timer=180*60;
+  }else{
+    list.push(...autoGen(d.Physics.map(q=>({...q,sub:"Physics"})),40));
+    list.push(...autoGen(d.Chemistry.map(q=>({...q,sub:"Chemistry"})),40));
+    list.push(...autoGen(d.Math.map(q=>({...q,sub:"Math"})),40));
+    timer=150*60;
+  }
+
+  answers=Array(list.length).fill(null);
+  marked=Array(list.length).fill(false);
+
+  setupUI.classList.add("hidden");
+  quizUI.classList.remove("hidden");
+  hBar.classList.remove("hidden");
+  examLabel.innerText=type+" MOCK";
+
+  buildPalette();
+  showQ(0);
+
+  interval=setInterval(()=>{
+    timer--;
+    let m=Math.floor(timer/60),s=timer%60;
+    timeLabel.innerText=`${m}:${s<10?"0":""}${s}`;
+    if(timer<=0)finish();
+  },1000);
 }
 
-list.sort(()=>Math.random()-0.5);
-answers=Array(list.length).fill(null);
-marked=Array(list.length).fill(false);
-
-setup-ui.classList.add('hidden');
-quiz-ui.classList.remove('hidden');
-h-bar.classList.remove('hidden');
-exam-label.innerText=type+" MOCK";
-
-buildPalette();
-show(0);
-interval=setInterval(()=>{
-timer--;
-let m=Math.floor(timer/60),s=timer%60;
-time-label.innerText=`${m}:${s<10?"0":""}${s}`;
-if(timer<=0)finish();
-},1000);
-}
-
-function show(i){
-index=i;
-let q=list[i];
-sub-tag.innerText=q.sub;
-q-count.innerText=`Q ${i+1}/${list.length}`;
-q-display.innerHTML=q.q;
-opt-list.innerHTML="";
-q.o.forEach((t,idx)=>{
-let d=document.createElement("div");
-d.className="option"+(answers[i]===idx?" selected":"");
-if(isReview){
-if(idx===q.a)d.classList.add("correct");
-else if(answers[i]===idx)d.classList.add("wrong");
-}
-d.innerHTML=t;
-if(!isReview)d.onclick=()=>{answers[i]=idx;show(i)};
-opt-list.appendChild(d);
-});
-if(isReview){
-sol-display.classList.remove("hidden");
-sol-display.innerHTML=`<div class="sol-box">${q.e}</div>`;
-}
-if(window.MathJax) MathJax.typeset();
-updatePalette();
+function showQ(i){
+  index=i;
+  let q=list[i];
+  subTag.innerText=q.sub;
+  qCount.innerText=`Q ${i+1}/${list.length}`;
+  qDisplay.innerHTML=q.q;
+  optList.innerHTML="";
+  q.o.forEach((t,idx)=>{
+    let d=document.createElement("div");
+    d.className="option"+(answers[i]===idx?" selected":"");
+    if(isReview){
+      if(idx===q.a)d.classList.add("correct");
+      else if(answers[i]===idx)d.classList.add("wrong");
+    }
+    d.innerHTML=t;
+    if(!isReview)d.onclick=()=>{answers[i]=idx;showQ(i)};
+    optList.appendChild(d);
+  });
+  if(isReview){
+    solDisplay.classList.remove("hidden");
+    solDisplay.innerHTML=`<div class="sol-box">${q.e}</div>`;
+  }
+  if(window.MathJax) MathJax.typeset();
+  updatePalette();
 }
 
 function buildPalette(){
-p-grid.innerHTML="";
-list.forEach((_,i)=>{
-let b=document.createElement("button");
-b.className="p-btn";
-b.innerText=i+1;
-b.onclick=()=>show(i);
-p-grid.appendChild(b);
-});
+  pGrid.innerHTML="";
+  list.forEach((_,i)=>{
+    let b=document.createElement("button");
+    b.className="p-btn";
+    b.innerText=i+1;
+    b.onclick=()=>showQ(i);
+    pGrid.appendChild(b);
+  });
 }
 
 function updatePalette(){
-document.querySelectorAll(".p-btn").forEach((b,i)=>{
-b.classList.remove("active","ans","mark");
-if(i===index)b.classList.add("active");
-if(answers[i]!=null)b.classList.add("ans");
-if(marked[i])b.classList.add("mark");
-});
+  document.querySelectorAll(".p-btn").forEach((b,i)=>{
+    b.classList.remove("active","ans","mark");
+    if(i===index)b.classList.add("active");
+    if(answers[i]!=null)b.classList.add("ans");
+    if(marked[i])b.classList.add("mark");
+  });
 }
 
-function next(){if(index<list.length-1)show(index+1)}
-function prev(){if(index>0)show(index-1)}
-function mark(){marked[index]=!marked[index];updatePalette()}
+function nextQ(){ if(index<list.length-1)showQ(index+1); }
+function prevQ(){ if(index>0)showQ(index-1); }
+function markQ(){ marked[index]=!marked[index]; updatePalette(); }
 
 function finish(){
-clearInterval(interval);
-quiz-ui.classList.add("hidden");
-h-bar.classList.add("hidden");
-res-ui.classList.remove("hidden");
-let score=0;
-list.forEach((q,i)=>{
-if(answers[i]===q.a){
-score+=(exam==="KEAM"?4:(q.sub==="Math"?2:1));
-}else if(answers[i]!=null && exam==="KEAM")score--;
-});
-final-score.innerText=score;
+  clearInterval(interval);
+  quizUI.classList.add("hidden");
+  hBar.classList.add("hidden");
+  resUI.classList.remove("hidden");
+  let score=0;
+  list.forEach((q,i)=>{
+    if(answers[i]===q.a){
+      score+=(exam==="KEAM"?4:(q.sub==="Math"?2:1));
+    }else if(answers[i]!=null && exam==="KEAM")score--;
+  });
+  finalScore.innerText=score;
 }
 
 function review(){
-isReview=true;
-res-ui.classList.add("hidden");
-quiz-ui.classList.remove("hidden");
-show(0);
+  isReview=true;
+  resUI.classList.add("hidden");
+  quizUI.classList.remove("hidden");
+  showQ(0);
 }
 </script>
+
 </body>
 </html>
-
