@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Exam Mock App v3</title>
+<title>Mock Test App v3</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
@@ -29,7 +29,6 @@ button{background:#2563eb;color:#fff;border:none;padding:10px 14px;border-radius
 <div id="timer"></div>
 </header>
 
-<!-- HOME -->
 <div class="card" id="home">
 <h2>📊 Progress</h2>
 <p id="stats"></p>
@@ -37,14 +36,12 @@ button{background:#2563eb;color:#fff;border:none;padding:10px 14px;border-radius
 <button onclick="start()">Start Test</button>
 </div>
 
-<!-- SETUP -->
 <div class="card hidden" id="setup">
 <h3>Select Exam</h3>
 <button onclick="chooseExam('CET')">MHT-CET (90Q)</button>
 <button onclick="chooseExam('KEAM')">KEAM (120Q)</button>
 </div>
 
-<!-- QUIZ -->
 <div class="card hidden" id="quiz">
 <h4 id="section"></h4>
 <h3 id="qtext"></h3>
@@ -55,7 +52,6 @@ button{background:#2563eb;color:#fff;border:none;padding:10px 14px;border-radius
 <button class="secondary hidden" id="nextBtn" onclick="nextQ()">Next</button>
 </div>
 
-<!-- RESULT -->
 <div class="card hidden" id="result">
 <h2>Result</h2>
 <p id="final"></p>
@@ -63,22 +59,69 @@ button{background:#2563eb;color:#fff;border:none;padding:10px 14px;border-radius
 </div>
 
 <script>
-// ================= QUESTION BANK (extend freely) =================
+// ================= QUESTION BANK =================
 const BANK={
 CET:{
-P:[{q:"SI unit of current?",o:["Volt","Ampere","Ohm","Watt"],a:1},
-{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0}],
-C:[{q:"pH of water?",o:["5","6","7","8"],a:2},
-{q:"Laughing gas?",o:["CO₂","N₂O","O₂","NH₃"],a:1}],
-M:[{q:"d/dx(sin x)?",o:["cos x","-cos x","sin x","-sin x"],a:0},
-{q:"log₁₀(100)?",o:["1","2","10","0"],a:1}]
+P:[
+{q:"SI unit of current?",o:["Volt","Ampere","Ohm","Watt"],a:1},
+{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0},
+{q:"Ohm’s law?",o:["V=IR","P=VI","F=ma","E=mc²"],a:0},
+{q:"Unit of power?",o:["J","W","N","Pa"],a:1},
+{q:"Mirror used in headlights?",o:["Plane","Convex","Concave","None"],a:2},
+{q:"Acceleration unit?",o:["m/s","m/s²","km/h","N"],a:1}
+],
+C:[
+{q:"pH of water?",o:["5","6","7","8"],a:2},
+{q:"Laughing gas?",o:["CO₂","N₂O","O₂","NH₃"],a:1},
+{q:"Atomic number of carbon?",o:["6","12","14","8"],a:0},
+{q:"Strong acid?",o:["HCl","CH₃COOH","NH₄OH","NaOH"],a:0},
+{q:"Common salt?",o:["NaCl","KCl","Na₂CO₃","CaCO₃"],a:0},
+{q:"Avogadro number?",o:["6.02×10²³","3×10⁸","9.8","1.6×10⁻¹⁹"],a:0}
+],
+M:[
+{q:"d/dx(sin x)?",o:["cos x","-cos x","sin x","-sin x"],a:0},
+{q:"log₁₀(100)?",o:["1","2","10","0"],a:1},
+{q:"Value of sin 30°?",o:["0","1","1/2","√3/2"],a:2},
+{q:"Area of circle?",o:["πr","2πr","πr²","r²"],a:2},
+{q:"2²+3²=?",o:["13","10","12","25"],a:0},
+{q:"Derivative of x²?",o:["2x","x","x²","1"],a:0}
+]
 },
 KEAM:{
-P:[{q:"Unit of force?",o:["J","N","W","Pa"],a:1}],
-C:[{q:"Atomic number of O?",o:["6","7","8","16"],a:2}],
-M:[{q:"cos 0°?",o:["0","1","-1","∞"],a:1}]
+P:[
+{q:"Unit of force?",o:["J","N","W","Pa"],a:1},
+{q:"Newton’s 2nd law?",o:["F=mv","F=ma","E=mc²","V=IR"],a:1},
+{q:"Work formula?",o:["Fs","F/s","s/F","F+s"],a:0}
+],
+C:[
+{q:"Atomic number of oxygen?",o:["6","7","8","16"],a:2},
+{q:"pH < 7 means?",o:["Basic","Neutral","Acidic","Salt"],a:2},
+{q:"Formula of ammonia?",o:["NH₃","NO₂","N₂O","NH₄"],a:0}
+],
+M:[
+{q:"cos 0°?",o:["0","1","-1","∞"],a:1},
+{q:"x+2=5, x=?",o:["1","2","3","4"],a:2},
+{q:"Value of π (approx)?",o:["2.14","3.14","1.41","3.41"],a:1}
+]
 }
 };
+
+// ================= UTILS =================
+function shuffle(a){
+for(let i=a.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+}
+function autoGenerate(bank,needed){
+let out=[];
+while(out.length<needed){
+let copy=[...bank];
+shuffle(copy);
+out.push(...copy);
+}
+return out.slice(0,needed);
+}
 
 // ================= STATE =================
 let exam="",questions=[],i=0,answers=[],visited=[];
@@ -93,7 +136,7 @@ graph.innerHTML="";
 history.slice(-5).forEach(s=>{
 let b=document.createElement("div");
 b.className="bar";
-b.style.width=(s*10)+"%";
+b.style.width=(Math.max(0,s)*10)+"%";
 b.innerText="Score "+s;
 graph.appendChild(b);
 });
@@ -105,7 +148,6 @@ function start(){
 home.classList.add("hidden");
 setup.classList.remove("hidden");
 }
-
 function chooseExam(e){
 exam=e;
 setup.classList.add("hidden");
@@ -116,26 +158,25 @@ buildQuestions();
 startTimer();
 loadQ();
 }
-
 function buildQuestions(){
 questions=[];
-let bank=BANK[exam];
-let count=exam==="CET"?30:40;
-["P","C","M"].forEach(s=>{
-shuffle(bank[s]);
-questions.push(...bank[s].slice(0,count));
-});
+let b=BANK[exam];
+if(exam==="CET"){
+questions.push(...autoGenerate(b.P,30));
+questions.push(...autoGenerate(b.C,30));
+questions.push(...autoGenerate(b.M,30));
+timer=8100;
+}else{
+questions.push(...autoGenerate(b.P,40));
+questions.push(...autoGenerate(b.C,40));
+questions.push(...autoGenerate(b.M,40));
+timer=7200;
+}
+shuffle(questions);
 answers=Array(questions.length).fill(null);
 visited=Array(questions.length).fill(false);
 buildPalette();
 restoreProgress();
-}
-
-function shuffle(a){
-for(let i=a.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1));
-[a[i],a[j]]=[a[j],a[i]];
-}
 }
 
 // ================= QUIZ =================
@@ -157,16 +198,14 @@ counter.innerText=`Attempted: ${answers.filter(x=>x!=null).length}/${questions.l
 nextBtn.classList.add("hidden");
 saveProgress();
 }
-
 function select(idx){
 answers[i]=idx;
 document.querySelectorAll(".option").forEach((o,j)=>{
-if(j===questions[i].a && idx===j)o.classList.add("correct");
+if(j===questions[i].a)o.classList.add("correct");
 else if(j===idx)o.classList.add("wrong");
 });
 nextBtn.classList.remove("hidden");
 }
-
 function nextQ(){
 i++;
 i<questions.length?loadQ():finish();
@@ -183,7 +222,6 @@ b.onclick=()=>{i=idx;loadQ();}
 palette.appendChild(b);
 });
 }
-
 function updatePalette(){
 document.querySelectorAll(".palette-btn").forEach((b,idx)=>{
 b.className="palette-btn";
@@ -194,7 +232,6 @@ if(answers[idx]!=null)b.classList.add("attempted");
 
 // ================= TIMER =================
 function startTimer(){
-timer = exam==="CET"?8100:7200;
 interval=setInterval(()=>{
 timer--;
 let m=Math.floor(timer/60),s=timer%60;
@@ -211,7 +248,7 @@ top.classList.add("hidden");
 result.classList.remove("hidden");
 let score=answers.reduce((a,v,i)=>a+(v===questions[i].a?1:(v!=null?-1:0)),0);
 let percent=Math.max(0,Math.round((score/questions.length)*100));
-let rank=percent>90?"< 1k":percent>75?"< 5k":percent>60?"< 15k":"> 30k";
+let rank=percent>90?"<1k":percent>75?"<5k":percent>60?"<15k":">30k";
 final.innerText=`Score: ${score}\nAccuracy: ${percent}%\nPredicted Rank: ${rank}`;
 history.push(score);
 localStorage.setItem("history",JSON.stringify(history));
@@ -224,11 +261,9 @@ saveProgress();
 alert("Paused. Resume later.");
 location.reload();
 }
-
 function saveProgress(){
 localStorage.setItem("resume",JSON.stringify({exam,i,answers,visited,timer}));
 }
-
 function restoreProgress(){
 let d=JSON.parse(localStorage.getItem("resume"));
 if(d && d.exam===exam){
