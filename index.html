@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exam Mock App v3</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
+header{background:#020617;padding:14px;display:flex;justify-content:space-between}
+.card{background:#020617;margin:14px;padding:16px;border-radius:14px}
+button{background:#2563eb;color:#fff;border:none;padding:10px 14px;border-radius:8px;margin:4px}
+.secondary{background:#475569}
+.hidden{display:none}
+.option{background:#1e293b;padding:10px;border-radius:8px;margin:8px 0}
+.correct{background:green}
+.wrong{background:red}
+.palette-btn{width:34px;height:34px;margin:3px;border:none;border-radius:6px;background:#334155;color:#fff}
+.visited{background:#2563eb}
+.attempted{background:green}
+.bar{height:14px;background:#38bdf8;border-radius:6px;margin:6px 0}
+</style>
+</head>
+
+<body>
+
+<header id="top" class="hidden">
+<div id="title"></div>
+<div id="timer"></div>
+</header>
+
+<!-- HOME -->
+<div class="card" id="home">
+<h2>📊 Progress</h2>
+<p id="stats"></p>
+<div id="graph"></div>
+<button onclick="start()">Start Test</button>
+</div>
+
+<!-- SETUP -->
+<div class="card hidden" id="setup">
+<h3>Select Exam</h3>
+<button onclick="chooseExam('CET')">MHT-CET (90Q)</button>
+<button onclick="chooseExam('KEAM')">KEAM (120Q)</button>
+</div>
+
+<!-- QUIZ -->
+<div class="card hidden" id="quiz">
+<h4 id="section"></h4>
+<h3 id="qtext"></h3>
+<div id="options"></div>
+<p id="counter"></p>
+<div id="palette"></div>
+<button class="secondary" onclick="pauseTest()">Pause</button>
+<button class="secondary hidden" id="nextBtn" onclick="nextQ()">Next</button>
+</div>
+
+<!-- RESULT -->
+<div class="card hidden" id="result">
+<h2>Result</h2>
+<p id="final"></p>
+<button onclick="location.reload()">Home</button>
+</div>
+
+<script>
+// ================= QUESTION BANK (extend freely) =================
+const BANK={
+CET:{
+P:[{q:"SI unit of current?",o:["Volt","Ampere","Ohm","Watt"],a:1},
+{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁷"],a:0}],
+C:[{q:"pH of water?",o:["5","6","7","8"],a:2},
+{q:"Laughing gas?",o:["CO₂","N₂O","O₂","NH₃"],a:1}],
+M:[{q:"d/dx(sin x)?",o:["cos x","-cos x","sin x","-sin x"],a:0},
+{q:"log₁₀(100)?",o:["1","2","10","0"],a:1}]
+},
+KEAM:{
+P:[{q:"Unit of force?",o:["J","N","W","Pa"],a:1}],
+C:[{q:"Atomic number of O?",o:["6","7","8","16"],a:2}],
+M:[{q:"cos 0°?",o:["0","1","-1","∞"],a:1}]
+}
+};
+
+// ================= STATE =================
+let exam="",questions=[],i=0,answers=[],visited=[];
+let timer=0,interval;
+let history=JSON.parse(localStorage.getItem("history")||"[]");
+
+// ================= HOME =================
+function renderHome(){
+let best=Math.max(0,...history);
+stats.innerText=`Tests: ${history.length} | Best: ${best} | Last: ${history.at(-1)||0}`;
+graph.innerHTML="";
+history.slice(-5).forEach(s=>{
+let b=document.createElement("div");
+b.className="bar";
+b.style.width=(s*10)+"%";
+b.innerText="Score "+s;
+graph.appendChild(b);
+});
+}
+renderHome();
+
+// ================= FLOW =================
+function start(){
+home.classList.add("hidden");
+setup.classList.remove("hidden");
+}
+
+function chooseExam(e){
+exam=e;
+setup.classList.add("hidden");
+quiz.classList.remove("hidden");
+top.classList.remove("hidden");
+title.innerText=e+" Full Mock";
+buildQuestions();
+startTimer();
+loadQ();
+}
+
+function buildQuestions(){
+questions=[];
+let bank=BANK[exam];
+let count=exam==="CET"?30:40;
+["P","C","M"].forEach(s=>{
+shuffle(bank[s]);
+questions.push(...bank[s].slice(0,count));
+});
+answers=Array(questions.length).fill(null);
+visited=Array(questions.length).fill(false);
+buildPalette();
+restoreProgress();
+}
+
+function shuffle(a){
+for(let i=a.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+}
+
+// ================= QUIZ =================
+function loadQ(){
+let q=questions[i];
+section.innerText="Q "+(i+1);
+qtext.innerText=q.q;
+options.innerHTML="";
+q.o.forEach((t,idx)=>{
+let d=document.createElement("div");
+d.className="option";
+d.innerText=t;
+d.onclick=()=>select(idx);
+options.appendChild(d);
+});
+visited[i]=true;
+updatePalette();
+counter.innerText=`Attempted: ${answers.filter(x=>x!=null).length}/${questions.length}`;
+nextBtn.classList.add("hidden");
+saveProgress();
+}
+
+function select(idx){
+answers[i]=idx;
+document.querySelectorAll(".option").forEach((o,j)=>{
+if(j===questions[i].a && idx===j)o.classList.add("correct");
+else if(j===idx)o.classList.add("wrong");
+});
+nextBtn.classList.remove("hidden");
+}
+
+function nextQ(){
+i++;
+i<questions.length?loadQ():finish();
+}
+
+// ================= PALETTE =================
+function buildPalette(){
+palette.innerHTML="";
+questions.forEach((_,idx)=>{
+let b=document.createElement("button");
+b.innerText=idx+1;
+b.className="palette-btn";
+b.onclick=()=>{i=idx;loadQ();}
+palette.appendChild(b);
+});
+}
+
+function updatePalette(){
+document.querySelectorAll(".palette-btn").forEach((b,idx)=>{
+b.className="palette-btn";
+if(visited[idx])b.classList.add("visited");
+if(answers[idx]!=null)b.classList.add("attempted");
+});
+}
+
+// ================= TIMER =================
+function startTimer(){
+timer = exam==="CET"?8100:7200;
+interval=setInterval(()=>{
+timer--;
+let m=Math.floor(timer/60),s=timer%60;
+timerEl.innerText=`${m}:${s.toString().padStart(2,"0")}`;
+if(timer<=0)finish();
+},1000);
+}
+
+// ================= FINISH =================
+function finish(){
+clearInterval(interval);
+quiz.classList.add("hidden");
+top.classList.add("hidden");
+result.classList.remove("hidden");
+let score=answers.reduce((a,v,i)=>a+(v===questions[i].a?1:(v!=null?-1:0)),0);
+let percent=Math.max(0,Math.round((score/questions.length)*100));
+let rank=percent>90?"< 1k":percent>75?"< 5k":percent>60?"< 15k":"> 30k";
+final.innerText=`Score: ${score}\nAccuracy: ${percent}%\nPredicted Rank: ${rank}`;
+history.push(score);
+localStorage.setItem("history",JSON.stringify(history));
+localStorage.removeItem("resume");
+}
+
+// ================= PAUSE =================
+function pauseTest(){
+saveProgress();
+alert("Paused. Resume later.");
+location.reload();
+}
+
+function saveProgress(){
+localStorage.setItem("resume",JSON.stringify({exam,i,answers,visited,timer}));
+}
+
+function restoreProgress(){
+let d=JSON.parse(localStorage.getItem("resume"));
+if(d && d.exam===exam){
+({i,answers,visited,timer}=d);
+}
+}
+</script>
+
+</body>
+</html>
